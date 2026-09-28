@@ -136,7 +136,7 @@ async function handlePayload(request) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const p = url.pathname;
+    const p = url.pathname.replace(/\/+/g, '/');
     if (request.method === 'POST' && p === '/api/android/v3/challenge') return handleChallenge(request, ctx);
     if (request.method === 'POST' && p === '/api/android/v3/activate') return handleActivate(request);
     if (request.method === 'POST' && p === '/api/android/v3/payload') return handlePayload(request);
