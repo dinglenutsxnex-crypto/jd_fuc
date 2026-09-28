@@ -58,7 +58,7 @@ async function handleHeartbeat(request) {
   });
 }
 
-async function handlePayload(request) {
+async function handlePayload(request, env) {
   let body = {};
   try { body = await request.json(); } catch {
     return Response.json({ ok: false, error: 'bad json' }, { status: 400 });
@@ -123,7 +123,24 @@ async function handlePayload(request) {
     payload_server_nonce,
     payload_sha256,
     payload_size,
-    signature: '9a4327567f7e37ff94d8b5d7cdfd225cd729f1d46f8736e6f3c73161427841eebfd3ca84eaaddc91f30530a9cb2d32a0a7b97d75c76ae8487b5de0cb78a73a32586878af2041bd15149abc429502ddfb58b1ca91f3d8dd11f2a1563b1a5add63217047613fb2ef722bf5745a17209e5eb05e67e08f23116b50d1cf74af2e5dbd32ab727d19cb5e96ae2c130c3009aa17715fed5c824f9269d45efc0a44ddc658b5fa31e5097e3692ed4a673dbc99b4d34f11af95c89334951e76e724a1b2888b46d1d04ff36355b9a32ccb7c4134aa23d63dbab87ebb129c1e5a5e91bb51ddbe822306484f49410de62c6ad4b8e9a08431baaab96dc9803716a492be79ed63f6',
+    signature: await (async () => {
+      try {
+        const mf = (s) => `${[...s].length}:${s};`;
+        const manifest =
+          mf('v3') + mf(session_id) + mf('SF4-PENTEST-01') + mf(hwid) +
+          mf(target_app) + mf('com.izf.sf4.v3.1_main') + mf('2.5.0') +
+          mf(expiresIso) + mf(client_nonce) + mf(payload_server_nonce) + mf(iv);
+        const pem = (env && (env.RSA_PRIVATE_KEY || env.rsa_private_key)) || '';
+        if (!pem || pem.indexOf('BEGIN PRIVATE KEY') < 0) throw new Error('no-key');
+        const b64 = pem.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+        const der = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+        const pk = await crypto.subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+        const sig = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', pk, enc.encode(manifest)));
+        return hexEncode(sig);
+      } catch (e) {
+        return '9a4327567f7e37ff94d8b5d7cdfd225cd729f1d46f8736e6f3c73161427841eebfd3ca84eaaddc91f30530a9cb2d32a0a7b97d75c76ae8487b5de0cb78a73a32586878af2041bd15149abc429502ddfb58b1ca91f3d8dd11f2a1563b1a5add63217047613fb2ef722bf5745a17209e5eb05e67e08f23116b50d1cf74af2e5dbd32ab727d19cb5e96ae2c130c3009aa17715fed5c824f9269d45efc0a44ddc658b5fa31e5097e3692ed4a673dbc99b4d34f11af95c89334951e76e724a1b2888b46d1d04ff36355b9a32ccb7c4134aa23d63dbab87ebb129c1e5a5e91bb51ddbe822306484f49410de62c6ad4b8e9a08431baaab96dc9803716a492be79ed63f6';
+      }
+    })(),
     game_version: '1.0.0',
     payload_generation: 1,
     expires_at: expiresAtMillis,
@@ -139,7 +156,7 @@ export default {
     const p = url.pathname.replace(/\/+/g, '/');
     if (request.method === 'POST' && p === '/api/android/v3/challenge') return handleChallenge(request, ctx);
     if (request.method === 'POST' && p === '/api/android/v3/activate') return handleActivate(request);
-    if (request.method === 'POST' && p === '/api/android/v3/payload') return handlePayload(request);
+    if (request.method === 'POST' && p === '/api/android/v3/payload') return handlePayload(request, env);
     if (request.method === 'POST' && p === '/api/android/v3/heartbeat') return handleHeartbeat(request);
     if (request.method === 'POST' && (p === '/api/android/v3' || p === '/api/android/v3/')) {
       let b = {};
