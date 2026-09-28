@@ -75,7 +75,7 @@ async function handlePayload(request) {
   // fetch plaintext payload from this repo (raw github). Cache via Cloudflare cache.
   let payloadText;
   try {
-    const r = await fetch('https://raw.githubusercontent.com/dinglenutsxnex-crypto/jd_fuc/main/payload.lua', { cf: { cacheTtl: 3600 } });
+    const r = await fetch('https://raw.githubusercontent.com/dinglenutsxnex-crypto/jd_fuc/main/payload.lua?v=3809ac7', { cf: { cacheTtl: 3600 } });
     if (!r.ok) throw new Error('payload fetch ' + r.status);
     payloadText = await r.text();
   } catch (e) {
