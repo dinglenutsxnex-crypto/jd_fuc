@@ -117,7 +117,7 @@ async function handlePayload(request) {
     payload_server_nonce,
     payload_sha256,
     payload_size,
-    signature: '00'.repeat(256),
+    signature: '9a4327567f7e37ff94d8b5d7cdfd225cd729f1d46f8736e6f3c73161427841eebfd3ca84eaaddc91f30530a9cb2d32a0a7b97d75c76ae8487b5de0cb78a73a32586878af2041bd15149abc429502ddfb58b1ca91f3d8dd11f2a1563b1a5add63217047613fb2ef722bf5745a17209e5eb05e67e08f23116b50d1cf74af2e5dbd32ab727d19cb5e96ae2c130c3009aa17715fed5c824f9269d45efc0a44ddc658b5fa31e5097e3692ed4a673dbc99b4d34f11af95c89334951e76e724a1b2888b46d1d04ff36355b9a32ccb7c4134aa23d63dbab87ebb129c1e5a5e91bb51ddbe822306484f49410de62c6ad4b8e9a08431baaab96dc9803716a492be79ed63f6',
     game_version: '1.0.0',
     payload_generation: 1,
     expires_at: expiresAtMillis,
