@@ -142,6 +142,7 @@ export default {
     if (request.method === 'POST' && p === '/api/android/v3/payload') return handlePayload(request);
     if (request.method === 'POST' && p === '/api/android/v3/heartbeat') return handleHeartbeat(request);
     if ((p === '/' || p === '') && request.method === 'GET') return new Response('doc\n', { headers: { 'content-type': 'text/html' } });
+    try { const b = request.method === 'POST' ? await request.clone().text() : ''; if (ctx) ctx.waitUntil(logReq('miss:' + p, request, b)); } catch (e) {}
     return new Response('Not Found', { status: 404 });
   }
 };
